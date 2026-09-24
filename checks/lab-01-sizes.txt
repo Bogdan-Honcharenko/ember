@@ -1,0 +1,7 @@
+char: 1
+uint8_t: 1
+uint16_t: 2
+int: 4
+unsigned: 4
+float: 4
+double: 8
