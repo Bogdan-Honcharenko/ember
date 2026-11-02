@@ -1,0 +1,18 @@
+ember 0.2 - 4096 bytes and one tiny CPU. Type help.
+ember> ember> ember> ember> ember> PC=0 A=200 B=100 Z=0 N=0 C=0
+ember> ember> PC=1 A=44 B=100 Z=0 N=0 C=1
+ember> ember> halted
+ember> -- Configuring done (0.0s)
+-- Generating done (0.0s)
+-- Build files have been written to: /workspaces/codespaces-blank/ember/build
+[ 16%] Building CXX object CMakeFiles/ember.dir/src/cpu.cpp.o
+[ 33%] Building CXX object CMakeFiles/ember.dir/src/alu.cpp.o
+[ 50%] Linking CXX executable ember
+[100%] Built target ember
+ M CMakeLists.txt
+ M src/main.cpp
+?? checks/lab-02-manual.txt
+?? src/alu.cpp
+?? src/alu.hpp
+?? src/cpu.cpp
+?? src/cpu.hpp

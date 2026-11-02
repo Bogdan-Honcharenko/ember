@@ -114,3 +114,33 @@ ASan і UBSan не зобов’язані її помітити. В основ�
 Повні виводи дослідів зберіг у [checks](checks).
 
 [Скелет і завдання викладача](https://github.com/rmalkevy/Programming-Practice-Projects/tree/main/courses/programming-fundamentals).
+
+## Лаба 2 — біти й маленький CPU
+
+У цій лабі додав процесор з регістрами A, B, PC і прапорцями Z, N, C. Команди вводяться в тому ж REPL.
+
+Працюють такі інструкції: HALT, NOP, ADD, SUB, AND, OR, XOR, NOT, SHL, SHR, INC, DEC. Опкод ділю на групу та номер через (op >> 4) & 0x0F.
+
+### Коротка перевірка
+
+200 + 100 у байті дає 44, бо 300 не вміщується в 8 біт. Після ADD маємо A=44 і C=1.
+
+    reg a 200
+    reg b 100
+    set 0 16
+    step
+    regs
+    PC=1 A=44 B=100 Z=0 N=0 C=1
+
+Ще приклад зі зсувом: якщо в A лежить 128, команда SHL дасть A=0, Z=1, C=1: старший біт вийшов назовні.
+
+Трасування програми з трьох інструкцій:
+
+    set 0 16   # ADD
+    set 1 24   # INC
+    set 2 0    # HALT
+    reg a 200
+    reg b 100
+    step       # A=44, C=1
+    step       # A=45, C лишається 1
+    step       # CPU halted
