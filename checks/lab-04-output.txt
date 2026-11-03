@@ -1,0 +1,4 @@
+ember 0.4 - 4096 bytes and one tiny CPU. Type help.
+ember> ember> ember> ember> ember> ember> ember> ember> ember> 3 2 1 ember> PC=8 H=0 A=0 B=0 Z=1 N=0 C=0
+ember> halted
+ember> 

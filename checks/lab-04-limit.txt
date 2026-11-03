@@ -1,0 +1,5 @@
+set 0 48
+set16 1 0
+run
+regs
+quit

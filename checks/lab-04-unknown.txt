@@ -1,0 +1,4 @@
+set 0 255
+run
+regs
+quit
