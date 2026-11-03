@@ -1,0 +1,17 @@
+set16 16 0x1234
+get16 16
+get 16
+get 17
+set16 4095 1
+set 0 0x22
+set16 1 0x800
+set 3 2
+set 4 0
+set 0x800 65
+set 0x801 66
+set 0x802 67
+dump
+run
+regs
+step
+quit

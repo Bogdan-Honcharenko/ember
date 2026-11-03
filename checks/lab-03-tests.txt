@@ -1,0 +1,11 @@
+A65 halted
+invalid data address
+invalid data address
+invalid data address
+invalid data address
+truncated instruction
+truncated instruction
+truncated instruction
+invalid PC
+invalid PC
+LAB03 TESTS PASSED
