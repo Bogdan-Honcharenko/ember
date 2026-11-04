@@ -10,3 +10,5 @@ Byte alu_shl(Byte a,Flags& f){f.c=(a&0x80U)!=0;Byte r=static_cast<Byte>(static_c
 Byte alu_shr(Byte a,Flags& f){f.c=(a&1U)!=0;Byte r=static_cast<Byte>(a>>1U);zn(r,f);return r;}
 Byte alu_inc(Byte a,Flags& f){Byte r=static_cast<Byte>(a+1U);zn(r,f);return r;}
 Byte alu_dec(Byte a,Flags& f){Byte r=static_cast<Byte>(a-1U);zn(r,f);return r;}
+
+Byte alu_mul(Byte a,Byte b,Flags& f) { unsigned product=static_cast<unsigned>(a)*b; Byte result=static_cast<Byte>(product); zn(result,f);f.c=product>255;return result; }

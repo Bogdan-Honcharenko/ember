@@ -3,7 +3,7 @@
 #include <iostream>
 #include "alu.hpp"
 DecodedOpcode decode(Byte op){return {static_cast<Byte>((op>>4U)&0x0FU),static_cast<Byte>(op&0x0FU)};}
-void dump_regs(const CPU& c){std::cout<<"PC="<<c.pc<<" H="<<c.h<<" A="<<static_cast<unsigned>(c.a)<<" B="<<static_cast<unsigned>(c.b)<<" Z="<<c.f.z<<" N="<<c.f.n<<" C="<<c.f.c<<'\n';}
+void dump_regs(const CPU& c){std::cout<<"PC="<<c.pc<<" SP="<<c.stack.pointer()<<" H="<<c.h<<" A="<<static_cast<unsigned>(c.a)<<" B="<<static_cast<unsigned>(c.b)<<" Z="<<c.f.z<<" N="<<c.f.n<<" C="<<c.f.c<<'\n';}
 
 #include "memory16.hpp"
 #include <iomanip>
@@ -105,6 +105,30 @@ void step(CPU& c) {
     case Op::Cls: clear(*c.mem); break;
     case Op::Plot: c.f.c = !plot(*c.mem, c.a, c.b); break;
     case Op::Show: show(*c.mem); break;
+    case Op::Mul: c.a = alu_mul(c.a, c.b, c.f); break;
+    case Op::PushA:
+        if (!c.stack.push(*c.mem,c.a)) { fail("stack overflow"); return; } break;
+    case Op::PushB:
+        if (!c.stack.push(*c.mem,c.b)) { fail("stack overflow"); return; } break;
+    case Op::PopA:
+        if (!c.stack.pop(*c.mem,c.a)) { fail("stack underflow"); return; } break;
+    case Op::PopB:
+        if (!c.stack.pop(*c.mem,c.b)) { fail("stack underflow"); return; } break;
+    case Op::Call: {
+        if (!fits(3)) return;
+        const auto target=get16(*c.mem,c.pc+1);
+        if (!valid(target)) return;
+        if (!c.stack.push16(*c.mem,static_cast<std::uint16_t>(c.pc+3))) {
+            fail("stack overflow"); return;
+        }
+        c.pc=target; return;
+    }
+    case Op::Ret: {
+        std::uint16_t target=0;
+        if (!c.stack.pop16(*c.mem,target)) { fail("stack underflow"); return; }
+        if (!valid(target)) return;
+        c.pc=target; return;
+    }
     default:
         c.halted = true;
         std::cout << "unknown opcode 0x" << std::hex << std::setw(2)

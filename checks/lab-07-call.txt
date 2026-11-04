@@ -1,0 +1,19 @@
+set 0 84
+set 1 4
+set 2 0
+set 3 0
+set 4 32
+set 5 65
+set 6 2
+set 7 85
+stack
+step
+regs
+stack
+step
+step
+step
+regs
+stack
+step
+quit

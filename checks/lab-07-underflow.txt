@@ -1,0 +1,5 @@
+set 0 81
+run
+regs
+stack
+quit

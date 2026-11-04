@@ -1,6 +1,6 @@
 # ember — лабораторні роботи
 
-Лабораторні 1–6 з основ програмування. Розділи розташовані за номером роботи.
+Лабораторні 1–7 з основ програмування. Розділи розташовані за номером роботи.
 
 ## Лаба 1 — Коробка байтів
 
@@ -163,7 +163,7 @@ cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug
 cmake --build build
 ./build/ember < checks/lab-03.txt
 ./build/ember < checks/lab-03-h.txt
-c++ -std=c++17 -Wall -Wextra -Werror -g -fsanitize=address,undefined -Isrc checks/lab-03-test.cpp src/cpu.cpp src/alu.cpp src/memory.cpp -o /tmp/lab03-test
+c++ -std=c++17 -Wall -Wextra -Werror -g -fsanitize=address,undefined -Isrc checks/lab-03-test.cpp src/cpu.cpp src/alu.cpp src/memory.cpp src/stack.cpp -o /tmp/lab03-test
 /tmp/lab03-test
 ```
 
@@ -358,7 +358,7 @@ HLOW бере молодший байт H: для цієї ділянки він
 cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug
 cmake --build build
 python3 checks/lab-04-check.py
-c++ -std=c++17 -Wall -Wextra -Werror -g -fsanitize=address,undefined -Isrc checks/lab-04-test.cpp src/cpu.cpp src/alu.cpp src/memory.cpp -o /tmp/lab04-test
+c++ -std=c++17 -Wall -Wextra -Werror -g -fsanitize=address,undefined -Isrc checks/lab-04-test.cpp src/cpu.cpp src/alu.cpp src/memory.cpp src/stack.cpp -o /tmp/lab04-test
 /tmp/lab04-test
 ```
 
@@ -495,7 +495,7 @@ findnz 0xA00 0xB00 на рамці дає found at 2560; після cls — not 
 cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug
 cmake --build build
 python3 checks/lab-05-check.py
-c++ -std=c++17 -Wall -Wextra -Werror -g -fsanitize=address,undefined -Isrc checks/lab-05-test.cpp src/cpu.cpp src/alu.cpp src/memory.cpp -o /tmp/lab05-test
+c++ -std=c++17 -Wall -Wextra -Werror -g -fsanitize=address,undefined -Isrc checks/lab-05-test.cpp src/cpu.cpp src/alu.cpp src/memory.cpp src/stack.cpp -o /tmp/lab05-test
 /tmp/lab05-test
 ```
 
@@ -642,3 +642,158 @@ python3 checks/lab-05-check.py
 і кожної дозволеної швидкості. Також перевірені кути, неактивні записи,
 помилковий індекс і збереження пам'яті поза екраном. ASan/UBSan помилок
 у цих перевірках не знайшли. Навмисні помилки є тільки в окремому досліді вище.
+
+## Лаба 7 — функції, стек і рекурсія
+
+### Стек
+
+Додав Stack у stack.hpp / stack.cpp. Його SP закритий, CPU користується
+push/pop та push16/pop16, які повертають bool. Байти лежать у Memory,
+у регіоні 0xF00–0xFFF, а не в окремому масиві.
+
+SP починається з 0xFFF і показує наступне вільне місце. PUSH спочатку пише
+байт, потім зменшує SP. POP спочатку збільшує SP, потім читає байт.
+Уміщаються всі 256 байтів: після останнього PUSH SP = 0xEFF, але запису
+за межами стека ще немає. Наступний PUSH зупинить CPU.
+На порожньому стеку POP зупиняє CPU з повідомленням stack underflow.
+CALL перевіряє місце відразу для двох байтів, RET — наявність обох байтів.
+Невдала операція через нестачу місця чи даних не змінює SP.
+
+Команда stack показує SP і до восьми верхніх байтів, regs тепер теж показує SP.
+Прапорці PUSH, POP, CALL та RET не змінюють.
+
+| Опкод | Інструкція | Байти |
+|---|---|---:|
+| 0x50 | PUSH A | 1 |
+| 0x51 | POP A | 1 |
+| 0x52 | PUSH B | 1 |
+| 0x53 | POP B | 1 |
+| 0x54 | CALL addr16 | 3 |
+| 0x55 | RET | 1 |
+| 0x1B | MUL A,B | 1 |
+
+MUL рахує добуток в unsigned, у A лишає молодші 8 бітів.
+Z та N рахуються з цього байта, C = 1, якщо повний добуток більший за 255.
+
+### Один виклик
+
+~~~text
+0000  54 04 00  CALL printA
+0003  00        HALT
+0004  20 41     printA: LOADI A,65
+0006  02        OUT
+0007  55        RET
+~~~
+
+| Виконана команда | Наступний PC | SP | Що на стеку |
+|---|---|---|---|
+| Початок | 0000 | FFF | порожньо |
+| CALL | 0004 | FFD | FFF=03, FFE=00 |
+| LOADI A,65 | 0006 | FFD | без змін |
+| OUT | 0007 | FFD | без змін; надруковано A |
+| RET | 0003 | FFF | порожньо |
+| HALT | 0004 | FFF | порожньо |
+
+Адреса повернення — 0003, тобто PC + 3. Якби зберіг сам PC, RET знову
+потрапляв би на CALL. Кладеться спочатку 03, потім 00; знімаються 00, потім 03.
+Зняті байти фізично не стираються: порожність визначається SP.
+Окремий тест викликає з 0x123 функцію на 0x456: на стеку 26 і 01,
+повернення — на 0x126. Так перевіряються обидва байти адреси.
+[Вивід одиночного виклику](checks/lab-07-call-output.txt).
+
+### Рекурсивний fact
+
+Використав готовий 30-байтовий лістинг із ISA. A — аргумент і результат.
+
+~~~text
+0000  20 05     LOADI A,5
+0002  54 07 00  CALL fact
+0005  03        OUTN
+0006  00        HALT
+0007  21 00     fact: LOADI B,0
+0009  1A        CMP A,B
+000A  31 1B 00  JZ base
+000D  21 01     LOADI B,1
+000F  1A        CMP A,B
+0010  31 1B 00  JZ base
+0013  50        PUSH A
+0014  19        DEC A
+0015  54 07 00  CALL fact
+0018  53        POP B
+0019  1B        MUL A,B
+001A  55        RET
+001B  20 01     base: LOADI A,1
+001D  55        RET
+~~~
+
+Перед рекурсією n зберігається через PUSH A. Після повернення A вже містить
+fact(n-1), тому старе n знімається в B, а потім перемножується з A.
+База n=0 або n=1 повертає 1 і не робить нових викликів.
+
+Нижче всі CALL/RET для fact(5). Адреси і SP шістнадцяткові, A десяткове:
+
+~~~text
+PC=2 op=54 SP=fff -> ffd A=5 -> 5 next PC=7
+PC=15 op=54 SP=ffc -> ffa A=4 -> 4 next PC=7
+PC=15 op=54 SP=ff9 -> ff7 A=3 -> 3 next PC=7
+PC=15 op=54 SP=ff6 -> ff4 A=2 -> 2 next PC=7
+PC=15 op=54 SP=ff3 -> ff1 A=1 -> 1 next PC=7
+PC=1d op=55 SP=ff1 -> ff3 A=1 -> 1 next PC=18
+PC=1a op=55 SP=ff4 -> ff6 A=2 -> 2 next PC=18
+PC=1a op=55 SP=ff7 -> ff9 A=6 -> 6 next PC=18
+PC=1a op=55 SP=ffa -> ffc A=24 -> 24 next PC=18
+PC=1a op=55 SP=ffd -> fff A=120 -> 120 next PC=5
+~~~
+
+Найменший SP — FF1: зайнято 14 байтів (п'ять адрес повернення і чотири n).
+Після завершення SP знову FFF. fact(0) повертає 1 за 9 кроків,
+fact(1) — 1 за 12, fact(5) — 120 за 60.
+[Повний вивід](checks/lab-07-output.txt).
+
+Зміна лістингу: замінив тільки байт за адресою 0001 з 05 на 06.
+fact(6) виконується за 72 кроки. Математично це 720, але 720 mod 256 = 208.
+Після останнього MUL маємо A=208, Z=0, N=1, C=1.
+[Запуск зміненого варіанта](checks/lab-07-six-output.txt).
+
+### Домовленість про виклик
+
+Аргумент передаю в A, результат забираю теж з A. CALL автоматично зберігає
+лише адресу повернення. Якщо потрібні старі B або H, про їх збереження
+дбає той, хто викликає функцію. Тимчасові значення функція сама кладе
+на стек і прибирає перед RET. Тут fact змінює B і не використовує H.
+Необов'язкові PUSH H / POP H у цій версії ще не реалізовані.
+
+На боці C++ step(CPU&) отримує сам CPU через посилання. Якби параметр був
+CPU за значенням, регістри змінювалися б у копії. CPU* теж дає доступ до
+оригіналу, але потребує розіменування і перевірки nullptr.
+
+### Навмисне переповнення
+
+Програма 54 00 00 — CALL самої себе без RET і без базового випадку.
+128 викликів займають 256 байтів. На 129-й спробі машина друкує
+stack overflow і зупиняється; SP=0xEFF. Процес ember залишається живим,
+тому після run можна виконати regs та stack.
+[Звіт](checks/lab-07-overflow-output.txt).
+Окремо POP A на порожньому стеку дає
+[stack underflow](checks/lab-07-underflow-output.txt).
+
+### Перевірка
+
+~~~sh
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug
+cmake --build build
+./build/ember < checks/lab-07.txt
+c++ -std=c++17 -Wall -Wextra -Werror -g -fsanitize=address,undefined -Isrc checks/lab-07-test.cpp src/cpu.cpp src/alu.cpp src/memory.cpp src/stack.cpp -o /tmp/lab07-test
+/tmp/lab07-test
+~~~
+
+Перевірені всі 65536 пар множників і прапорці; 256 PUSH/POP у зворотному
+порядку; нестача одного байта для двобайтової операції; неправильна адреса
+і обрізаний CALL; fact(0), fact(1), fact(5), fact(6); навмисне переповнення.
+Пройшли також тести лаб 3–6 з ASan/UBSan. Виводи чотирьох програм лаби 5
+збігаються з попередніми, крім доданого поля SP у regs.
+
+У CMake перелічені шість одиниць трансляції:
+main.cpp, memory.cpp, dump.cpp, cpu.cpp, alu.cpp, stack.cpp.
+Розкладка CPU з розділу 6 описує тег lab-06. Тепер Stack займає 2 байти
+за зсувом 18, кінцевих padding-байтів лишилось 4, sizeof(CPU) усе ще 24.

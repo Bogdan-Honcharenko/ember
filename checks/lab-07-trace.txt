@@ -1,0 +1,14 @@
+fact(0)=1 steps=9 minSP=ffd finalSP=fff
+fact(1)=1 steps=12 minSP=ffd finalSP=fff
+PC=2 op=54 SP=fff -> ffd A=5 -> 5 next PC=7
+PC=15 op=54 SP=ffc -> ffa A=4 -> 4 next PC=7
+PC=15 op=54 SP=ff9 -> ff7 A=3 -> 3 next PC=7
+PC=15 op=54 SP=ff6 -> ff4 A=2 -> 2 next PC=7
+PC=15 op=54 SP=ff3 -> ff1 A=1 -> 1 next PC=7
+PC=1d op=55 SP=ff1 -> ff3 A=1 -> 1 next PC=18
+PC=1a op=55 SP=ff4 -> ff6 A=2 -> 2 next PC=18
+PC=1a op=55 SP=ff7 -> ff9 A=6 -> 6 next PC=18
+PC=1a op=55 SP=ffa -> ffc A=24 -> 24 next PC=18
+PC=1a op=55 SP=ffd -> fff A=120 -> 120 next PC=5
+fact(5)=120 steps=60 minSP=ff1 finalSP=fff
+fact(6)=208 steps=72 minSP=fee finalSP=fff

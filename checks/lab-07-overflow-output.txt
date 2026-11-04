@@ -1,0 +1,5 @@
+ember 0.5 - 4096 bytes and one tiny CPU. Type help.
+ember> ember> ember> ember> stack overflow
+ember> PC=0 SP=3839 H=0 A=0 B=0 Z=0 N=0 C=0
+ember> SP=0xeff top: f00:00 f01:03 f02:00 f03:03 f04:00 f05:03 f06:00 f07:03
+ember> 
