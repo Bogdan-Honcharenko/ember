@@ -1,0 +1,15 @@
+set 0 4
+set 1 0
+set 2 8
+set 3 0
+set 2048 72
+set 2049 69
+set 2050 76
+set 2051 76
+set 2052 79
+set 2053 0
+find 2048 2054 76
+findnz 2048 2054
+run
+regs
+quit

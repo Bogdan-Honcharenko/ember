@@ -1,0 +1,13 @@
+set 0 64
+set 1 32
+set 2 128
+set 3 40
+set 4 0
+set 5 10
+set 6 42
+set 7 67
+set 8 0
+run
+get 0xA00
+dump
+quit

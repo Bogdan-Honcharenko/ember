@@ -1,3 +1,4 @@
+#include "display.hpp"
 #include "cpu.hpp"
 #include <iostream>
 #include "alu.hpp"
@@ -31,6 +32,18 @@ void step(CPU& c) {
     case 0x01: break;
     case 0x02: std::cout << static_cast<char>(c.a); break;
     case 0x03: std::cout << static_cast<unsigned>(c.a) << " "; break;
+    case 0x04: {
+        if (!fits(3)) return;
+        const auto address = get16(*c.mem, c.pc + 1);
+        if (!valid(address)) return;
+        for (std::size_t i = 0; i < 256; ++i) {
+            if (i >= MEM_SIZE - address) { fail("unterminated string at memory boundary"); return; }
+            const Byte value = mem_get(*c.mem, address + i);
+            if (value == 0) break;
+            std::cout << static_cast<char>(value);
+        }
+        c.pc += 3; return;
+    }
     case 0x10: c.a = alu_add(c.a, c.b, c.f); break;
     case 0x11: c.a = alu_sub(c.a, c.b, c.f); break;
     case 0x12: c.a = alu_and(c.a, c.b, c.f); break;
@@ -89,6 +102,9 @@ void step(CPU& c) {
     case 0x30: jump(true); return;
     case 0x31: jump(c.f.z); return;
     case 0x32: jump(!c.f.z); return;
+    case 0x40: clear(*c.mem); break;
+    case 0x41: c.f.c = !plot(*c.mem, c.a, c.b); break;
+    case 0x43: show(*c.mem); break;
     default:
         c.halted = true;
         std::cout << "unknown opcode 0x" << std::hex << std::setw(2)

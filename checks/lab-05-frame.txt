@@ -1,0 +1,5 @@
+frame
+show
+findnz 0xA00 0xB00
+dump
+quit
