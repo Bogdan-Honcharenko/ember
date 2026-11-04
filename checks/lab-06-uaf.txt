@@ -1,0 +1,56 @@
+=================================================================
+==7188==ERROR: AddressSanitizer: heap-use-after-free on address 0x502000000010 at pc 0x587761c33bda bp 0x7fff57638610 sp 0x7fff57638600
+READ of size 4 at 0x502000000010 thread T0
+    #0 0x587761c33bd9 in main checks/lab-06-heap.cpp:11
+    #1 0x781458a1c1c9 in __libc_start_call_main ../sysdeps/nptl/libc_start_call_main.h:58
+    #2 0x781458a1c28a in __libc_start_main_impl ../csu/libc-start.c:360
+    #3 0x587761c33544 in _start (/tmp/lab06-heap+0x4544) (BuildId: faf001ae79843e7003f939e372ff723fff4bf19a)
+
+0x502000000010 is located 0 bytes inside of 4-byte region [0x502000000010,0x502000000014)
+freed by thread T0 here:
+    #0 0x7814596b05e8 in operator delete(void*, unsigned long) ../../../../src/libsanitizer/asan/asan_new_delete.cpp:164
+    #1 0x587761c33a77 in main checks/lab-06-heap.cpp:10
+    #2 0x781458a1c1c9 in __libc_start_call_main ../sysdeps/nptl/libc_start_call_main.h:58
+    #3 0x781458a1c28a in __libc_start_main_impl ../csu/libc-start.c:360
+    #4 0x587761c33544 in _start (/tmp/lab06-heap+0x4544) (BuildId: faf001ae79843e7003f939e372ff723fff4bf19a)
+
+previously allocated by thread T0 here:
+    #0 0x7814596af548 in operator new(unsigned long) ../../../../src/libsanitizer/asan/asan_new_delete.cpp:95
+    #1 0x587761c33834 in main checks/lab-06-heap.cpp:8
+    #2 0x781458a1c1c9 in __libc_start_call_main ../sysdeps/nptl/libc_start_call_main.h:58
+    #3 0x781458a1c28a in __libc_start_main_impl ../csu/libc-start.c:360
+    #4 0x587761c33544 in _start (/tmp/lab06-heap+0x4544) (BuildId: faf001ae79843e7003f939e372ff723fff4bf19a)
+
+SUMMARY: AddressSanitizer: heap-use-after-free checks/lab-06-heap.cpp:11 in main
+Shadow bytes around the buggy address:
+  0x501ffffffd80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  0x501ffffffe00: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  0x501ffffffe80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  0x501fffffff00: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  0x501fffffff80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+=>0x502000000000: fa fa[fd]fa fa fa fa fa fa fa fa fa fa fa fa fa
+  0x502000000080: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa
+  0x502000000100: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa
+  0x502000000180: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa
+  0x502000000200: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa
+  0x502000000280: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa
+Shadow byte legend (one shadow byte represents 8 application bytes):
+  Addressable:           00
+  Partially addressable: 01 02 03 04 05 06 07 
+  Heap left redzone:       fa
+  Freed heap region:       fd
+  Stack left redzone:      f1
+  Stack mid redzone:       f2
+  Stack right redzone:     f3
+  Stack after return:      f5
+  Stack use after scope:   f8
+  Global redzone:          f9
+  Global init order:       f6
+  Poisoned by user:        f7
+  Container overflow:      fc
+  Array cookie:            ac
+  Intra object redzone:    bb
+  ASan internal:           fe
+  Left alloca redzone:     ca
+  Right alloca redzone:    cb
+==7188==ABORTING

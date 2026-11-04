@@ -1,0 +1,12 @@
+
+=================================================================
+==7180==ERROR: LeakSanitizer: detected memory leaks
+
+Direct leak of 4 byte(s) in 1 object(s) allocated from:
+    #0 0x707546b66548 in operator new(unsigned long) ../../../../src/libsanitizer/asan/asan_new_delete.cpp:95
+    #1 0x649197d4c7b4 in main checks/lab-06-heap.cpp:7
+    #2 0x707545ed31c9 in __libc_start_call_main ../sysdeps/nptl/libc_start_call_main.h:58
+    #3 0x707545ed328a in __libc_start_main_impl ../csu/libc-start.c:360
+    #4 0x649197d4c544 in _start (/tmp/lab06-heap+0x4544) (BuildId: faf001ae79843e7003f939e372ff723fff4bf19a)
+
+SUMMARY: AddressSanitizer: 4 byte(s) leaked in 1 allocation(s).

@@ -12,7 +12,7 @@ void step(CPU& c) {
     if (c.halted) { std::cout << "halted" << std::endl; return; }
     auto fail = [&](const char* message) { c.halted = true; std::cout << message << std::endl; };
     if (!c.mem || c.pc >= MEM_SIZE) { fail("invalid PC"); return; }
-    const Byte op = mem_get(*c.mem, c.pc);
+    const Op op = static_cast<Op>(mem_get(*c.mem, c.pc));
     auto fits = [&](unsigned size) {
         if (size > MEM_SIZE - c.pc) { fail("truncated instruction"); return false; }
         return true;
@@ -28,11 +28,11 @@ void step(CPU& c) {
         else c.pc += 3;
     };
     switch (op) {
-    case 0x00: c.halted = true; break;
-    case 0x01: break;
-    case 0x02: std::cout << static_cast<char>(c.a); break;
-    case 0x03: std::cout << static_cast<unsigned>(c.a) << " "; break;
-    case 0x04: {
+    case Op::Halt: c.halted = true; break;
+    case Op::Nop: break;
+    case Op::Out: std::cout << static_cast<char>(c.a); break;
+    case Op::Outn: std::cout << static_cast<unsigned>(c.a) << " "; break;
+    case Op::Outs: {
         if (!fits(3)) return;
         const auto address = get16(*c.mem, c.pc + 1);
         if (!valid(address)) return;
@@ -44,67 +44,67 @@ void step(CPU& c) {
         }
         c.pc += 3; return;
     }
-    case 0x10: c.a = alu_add(c.a, c.b, c.f); break;
-    case 0x11: c.a = alu_sub(c.a, c.b, c.f); break;
-    case 0x12: c.a = alu_and(c.a, c.b, c.f); break;
-    case 0x13: c.a = alu_or(c.a, c.b, c.f); break;
-    case 0x14: c.a = alu_xor(c.a, c.b, c.f); break;
-    case 0x15: c.a = alu_not(c.a, c.f); break;
-    case 0x16: c.a = alu_shl(c.a, c.f); break;
-    case 0x17: c.a = alu_shr(c.a, c.f); break;
-    case 0x18: c.a = alu_inc(c.a, c.f); break;
-    case 0x19: c.a = alu_dec(c.a, c.f); break;
-    case 0x1a: (void)alu_sub(c.a, c.b, c.f); break;
-    case 0x20:
+    case Op::Add: c.a = alu_add(c.a, c.b, c.f); break;
+    case Op::Sub: c.a = alu_sub(c.a, c.b, c.f); break;
+    case Op::And: c.a = alu_and(c.a, c.b, c.f); break;
+    case Op::Or: c.a = alu_or(c.a, c.b, c.f); break;
+    case Op::Xor: c.a = alu_xor(c.a, c.b, c.f); break;
+    case Op::Not: c.a = alu_not(c.a, c.f); break;
+    case Op::Shl: c.a = alu_shl(c.a, c.f); break;
+    case Op::Shr: c.a = alu_shr(c.a, c.f); break;
+    case Op::Inc: c.a = alu_inc(c.a, c.f); break;
+    case Op::Dec: c.a = alu_dec(c.a, c.f); break;
+    case Op::Cmp: (void)alu_sub(c.a, c.b, c.f); break;
+    case Op::LoadiA:
         if (!fits(2)) return;
         c.a = mem_get(*c.mem, c.pc + 1); c.pc += 2; return;
-    case 0x21:
+    case Op::LoadiB:
         if (!fits(2)) return;
         c.b = mem_get(*c.mem, c.pc + 1); c.pc += 2; return;
-    case 0x22: {
+    case Op::LoadA: {
         if (!fits(3)) return;
         const auto address = get16(*c.mem, c.pc + 1);
         if (!valid(address)) return;
         c.a = mem_get(*c.mem, address); c.pc += 3; return;
     }
-    case 0x23: {
+    case Op::LoadB: {
         if (!fits(3)) return;
         const auto address = get16(*c.mem, c.pc + 1);
         if (!valid(address)) return;
         c.b = mem_get(*c.mem, address); c.pc += 3; return;
     }
-    case 0x24: {
+    case Op::StoreA: {
         if (!fits(3)) return;
         const auto address = get16(*c.mem, c.pc + 1);
         if (!valid(address)) return;
         mem_set(*c.mem, address, c.a); c.pc += 3; return;
     }
-    case 0x25: {
+    case Op::StoreB: {
         if (!fits(3)) return;
         const auto address = get16(*c.mem, c.pc + 1);
         if (!valid(address)) return;
         mem_set(*c.mem, address, c.b); c.pc += 3; return;
     }
-    case 0x26: c.a = c.b; break;
-    case 0x27: c.b = c.a; break;
-    case 0x28:
+    case Op::MovAB: c.a = c.b; break;
+    case Op::MovBA: c.b = c.a; break;
+    case Op::LoadH:
         if (!fits(3)) return;
         c.h = get16(*c.mem, c.pc + 1); c.pc += 3; return;
-    case 0x29:
+    case Op::LoadAH:
         if (!valid(c.h)) return;
         c.a = mem_get(*c.mem, c.h); break;
-    case 0x2a:
+    case Op::StoreHA:
         if (!valid(c.h)) return;
         mem_set(*c.mem, c.h, c.a); break;
-    case 0x2b: ++c.h; break;
-    case 0x2c: --c.h; break;
-    case 0x2d: c.a = static_cast<Byte>(c.h & 0xff); break;
-    case 0x30: jump(true); return;
-    case 0x31: jump(c.f.z); return;
-    case 0x32: jump(!c.f.z); return;
-    case 0x40: clear(*c.mem); break;
-    case 0x41: c.f.c = !plot(*c.mem, c.a, c.b); break;
-    case 0x43: show(*c.mem); break;
+    case Op::IncH: ++c.h; break;
+    case Op::DecH: --c.h; break;
+    case Op::HLow: c.a = static_cast<Byte>(c.h & 0xff); break;
+    case Op::Jmp: jump(true); return;
+    case Op::Jz: jump(c.f.z); return;
+    case Op::Jnz: jump(!c.f.z); return;
+    case Op::Cls: clear(*c.mem); break;
+    case Op::Plot: c.f.c = !plot(*c.mem, c.a, c.b); break;
+    case Op::Show: show(*c.mem); break;
     default:
         c.halted = true;
         std::cout << "unknown opcode 0x" << std::hex << std::setw(2)

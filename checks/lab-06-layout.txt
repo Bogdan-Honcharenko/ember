@@ -1,0 +1,11 @@
+CPU size=24 align=8
+mem offset=0 size=8
+pc offset=8 size=2
+h offset=10 size=2
+a offset=12 size=1
+b offset=13 size=1
+f offset=14 size=3
+halted offset=17 size=1
+Flags=3 Sprite=5 Sprite align=1
+Sprite offsets=0,1,2,3,4
+LAB06 TESTS PASSED: every position and speed, corners, commands, preserved memory
